@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>退勤チェック日報</title>
+<style>
+/* ─── 変数 ──────────────────────────────────────────────────────── */
+:root {
+  --rose:       #c2185b;
+  --pink:       #e8698d;
+  --pink-mid:   #f48fb1;
+  --pink-light: #fce4ec;
+  --pink-pale:  #fff8fb;
+  --green:      #2e7d32;
+  --gray-900:   #1a1a1a;
+  --gray-700:   #424242;
+  --gray-500:   #757575;
+  --gray-300:   #e0e0e0;
+  --gray-100:   #fafafa;
+  --white:      #ffffff;
+  --shadow-sm:  0 1px 4px rgba(194,24,91,.10);
+  --shadow-md:  0 4px 16px rgba(194,24,91,.14);
+  --radius-sm:  8px;
+  --radius-lg:  16px;
+  /* iPhoneのホームバー・ノッチ対応 */
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top:    env(safe-area-inset-top, 0px);
+}
+
+/* ─── ベース ────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body {
+  font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic UI', 'Meiryo', sans-serif;
+  background: linear-gradient(160deg, #fdf0f6 0%, #f8ebf4 50%, #fdf5f0 100%);
+  min-height: 100vh;
+  color: var(--gray-900);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  /* タップハイライトを消す */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ─── ヘッダー ──────────────────────────────────────────────────── */
+.app-header {
+  background: linear-gradient(135deg, #ad1457 0%, #c2185b 40%, #e91e63 80%, #e8698d 100%);
+  color: var(--white);
+  padding: calc(16px + var(--safe-top)) 20px 18px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(173,20,87,.35);
+}
+.app-header::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 70% 50%, rgba(255,255,255,.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+.header-icon { font-size: 1.8rem; margin-bottom: 4px; display: block; }
+.app-header h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  margin-bottom: 3px;
+}
+.app-header .sub {
+  font-size: 0.7rem;
+  opacity: .75;
+  letter-spacing: .12em;
+}
+
+/* ─── コンテンツ ──────────────────────────────────────────────── */
+.container {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 16px 12px calc(88px + var(--safe-bottom));
+}
+
+/* ─── カード共通 ─────────────────────────────────────────────── */
+.card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(232,105,141,.12);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+/* ─── カード見出し ───────────────────────────────────────────── */
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px 10px;
+  background: linear-gradient(90deg, var(--pink-light) 0%, rgba(252,228,236,.3) 100%);
+  border-bottom: 1px solid rgba(232,105,141,.15);
+}
+.card-header .section-icon { font-size: 1rem; }
+.card-header h2 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--rose);
+  letter-spacing: .05em;
+}
+.card-body { padding: 4px 0 8px; }
+
+/* ─── 基本情報 ──────────────────────────────────────────────── */
+.basic-info .card-body {
+  padding: 14px 14px 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.field-group label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--pink);
+  letter-spacing: .08em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+/* iOSズーム防止のため16px必須 */
+.field-group input[type="text"] {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--gray-900);
+  background: var(--gray-100);
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.field-group input[type="text"]:focus {
+  border-color: var(--pink);
+  box-shadow: 0 0 0 3px rgba(232,105,141,.15);
+  background: var(--white);
+}
+
+/* ─── チェックアイテム ──────────────────────────────────────── */
+.check-item {
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid rgba(0,0,0,.045);
+}
+.check-item:last-child { border-bottom: none; }
+
+/* ラベル行（番号＋テキスト） */
+.item-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.item-num {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--pink);
+  width: 26px;
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+.item-label {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--gray-700);
+  line-height: 1.45;
+}
+
+/* ─── トグルボタングループ ──────────────────────────────────── */
+.toggle-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  /* インデントをitem-numの幅に合わせる */
+  padding-left: 34px;
+}
+.toggle-btn {
+  /* タッチターゲット最低44px */
+  min-height: 44px;
+  padding: 8px 6px;
+  border-radius: 10px;
+  border: 1.5px solid var(--gray-300);
+  background: var(--white);
+  color: var(--gray-500);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1.3;
+  text-align: center;
+  /* ダブルタップズーム無効 */
+  touch-action: manipulation;
+  transition: background .15s, border-color .15s, color .15s, box-shadow .15s;
+  user-select: none;
+  -webkit-user-select: none;
+}
+@media (hover: hover) {
+  .toggle-btn:hover {
+    border-color: var(--pink-mid);
+    color: var(--pink);
+  }
+}
+.toggle-btn:active { transform: scale(.97); }
+
+.toggle-btn.active-ok {
+  background: linear-gradient(135deg, var(--rose), var(--pink));
+  border-color: transparent;
+  color: var(--white);
+  box-shadow: 0 2px 10px rgba(194,24,91,.30);
+}
+.toggle-btn.active-ng {
+  background: linear-gradient(135deg, #bf360c, #e64a19);
+  border-color: transparent;
+  color: var(--white);
+  box-shadow: 0 2px 10px rgba(191,54,12,.25);
+}
+
+/* ─── 条件付き入力欄 ─────────────────────────────────────────── */
+.conditional-input {
+  display: none;
+  margin-top: 10px;
+  margin-left: 34px;
+  padding: 12px 12px 10px;
+  background: #fff5f9;
+  border: 1.5px solid rgba(232,105,141,.28);
+  border-radius: var(--radius-sm);
+  animation: slideDown .2s ease;
+}
+.conditional-input.show { display: block; }
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.conditional-input label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--rose);
+  margin-bottom: 6px;
+  letter-spacing: .05em;
+}
+/* iOSズーム防止 */
+.conditional-input input[type="text"] {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1.5px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--gray-900);
+  background: var(--white);
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.conditional-input input[type="text"]:focus {
+  border-color: var(--pink);
+  box-shadow: 0 0 0 3px rgba(232,105,141,.15);
+}
+
+/* ─── 特記事項 ──────────────────────────────────────────────── */
+.memo-card .card-body { padding: 14px 14px 16px; }
+.memo-card textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--gray-900);
+  background: var(--gray-100);
+  resize: vertical;
+  min-height: 96px;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.memo-card textarea:focus {
+  border-color: var(--pink);
+  box-shadow: 0 0 0 3px rgba(232,105,141,.15);
+  background: var(--white);
+}
+
+/* ─── 生成ボタン（固定）────────────────────────────────────── */
+.generate-btn-wrap {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  padding: 12px 16px calc(12px + var(--safe-bottom));
+  background: linear-gradient(to top, rgba(253,240,246,.98) 65%, transparent);
+  display: flex;
+  justify-content: center;
+  z-index: 50;
+}
+.generate-btn {
+  background: linear-gradient(135deg, #ad1457, #c2185b 50%, #e91e63);
+  color: var(--white);
+  border: none;
+  border-radius: 28px;
+  padding: 0 40px;
+  height: 56px;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 6px 24px rgba(173,20,87,.40);
+  letter-spacing: .06em;
+  touch-action: manipulation;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 440px;
+  justify-content: center;
+  transition: filter .15s, transform .15s;
+  user-select: none;
+  -webkit-user-select: none;
+}
+@media (hover: hover) {
+  .generate-btn:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+  }
+}
+.generate-btn:active { transform: scale(.98); filter: brightness(.95); }
+
+/* ─── 進捗バー ───────────────────────────────────────────────── */
+.progress-wrap {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(232,105,141,.12);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.progress-label { font-size: 0.78rem; color: var(--pink); font-weight: 700; white-space: nowrap; }
+.progress-bar-bg {
+  flex: 1;
+  height: 8px;
+  background: var(--gray-300);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--rose), var(--pink));
+  border-radius: 4px;
+  transition: width .4s cubic-bezier(.4,0,.2,1);
+}
+.progress-pct { font-size: 0.82rem; font-weight: 700; color: var(--rose); white-space: nowrap; }
+
+/* ─── モーダル（スマホ：下から出るボトムシート）─────────────── */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.55);
+  z-index: 200;
+  /* スマホ：下揃え */
+  align-items: flex-end;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.modal-overlay.open { display: flex; }
+
+.modal-box {
+  background: var(--white);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -4px 32px rgba(0,0,0,.20);
+  overflow: hidden;
+  animation: slideUp .3s cubic-bezier(.34,1.1,.64,1);
+  padding-bottom: var(--safe-bottom);
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ドラッグハンドル */
+.modal-handle {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 4px;
+  flex-shrink: 0;
+}
+.modal-handle::after {
+  content: '';
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--gray-300);
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #ad1457, #e91e63);
+  color: var(--white);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.modal-header h3 { font-size: 0.92rem; font-weight: 700; letter-spacing: .05em; }
+.modal-close {
+  background: rgba(255,255,255,.2);
+  border: none;
+  color: var(--white);
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  touch-action: manipulation;
+  font-family: inherit;
+  flex-shrink: 0;
+  transition: background .15s;
+}
+.modal-close:active { background: rgba(255,255,255,.35); }
+
+.modal-body {
+  padding: 14px 14px 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+}
+.modal-textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', monospace;
+  line-height: 1.8;
+  color: var(--gray-900);
+  resize: none;
+  background: #fffbfc;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  min-height: 260px;
+}
+
+.modal-footer {
+  padding: 12px 14px 14px;
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.copy-btn {
+  flex: 1;
+  background: linear-gradient(135deg, #ad1457, #e91e63);
+  color: var(--white);
+  border: none;
+  border-radius: 12px;
+  height: 52px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  touch-action: manipulation;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: filter .15s;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.copy-btn:active { filter: brightness(.88); }
+.copy-btn.copied {
+  background: linear-gradient(135deg, var(--green), #43a047);
+  box-shadow: 0 4px 16px rgba(46,125,50,.3);
+}
+.select-btn {
+  background: var(--gray-100);
+  border: 1.5px solid var(--gray-300);
+  border-radius: 12px;
+  height: 52px;
+  padding: 0 18px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  cursor: pointer;
+  font-family: inherit;
+  touch-action: manipulation;
+  white-space: nowrap;
+  transition: background .15s;
+}
+.select-btn:active { background: var(--gray-300); }
+
+/* ─── トースト ───────────────────────────────────────────────── */
+#toast {
+  position: fixed;
+  bottom: calc(80px + var(--safe-bottom));
+  left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  background: var(--green);
+  color: var(--white);
+  padding: 10px 22px;
+  border-radius: 24px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  opacity: 0;
+  transition: all .28s;
+  pointer-events: none;
+  z-index: 300;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(46,125,50,.4);
+}
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ─── PC: モーダルをセンター表示 ────────────────────────────── */
+@media (min-width: 600px) {
+  .container { padding: 20px 16px calc(100px + var(--safe-bottom)); }
+  .basic-info .card-body { gap: 16px; }
+  .modal-overlay { align-items: center; padding: 20px; }
+  .modal-box {
+    border-radius: var(--radius-lg);
+    max-width: 560px;
+    animation: modalIn .25s cubic-bezier(.34,1.3,.64,1);
+    padding-bottom: 0;
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(.93) translateY(12px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .modal-handle { display: none; }
+  .toggle-group { gap: 10px; }
+  .toggle-btn { min-height: 40px; font-size: 0.88rem; }
+}
+
+/* ─── スマホのみ：基本情報を1列に ──────────────────────────── */
+@media (max-width: 440px) {
+  .basic-info .card-body { grid-template-columns: 1fr; gap: 10px; }
+}
+
+/* ─── 印刷 ──────────────────────────────────────────────────── */
+@media print {
+  .generate-btn-wrap, #modal-overlay, #toast { display: none !important; }
+  .container { padding-bottom: 20px; }
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <span class="header-icon">🌸</span>
+  <h1>退勤チェック日報</h1>
+  <div class="sub">End of Shift Checklist</div>
+</header>
+
+<div class="container">
+
+  <!-- 進捗 -->
+  <div class="progress-wrap">
+    <span class="progress-label">チェック完了</span>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+    <span class="progress-pct" id="progress-pct">0 / 24</span>
+  </div>
+
+  <!-- 基本情報 -->
+  <div class="card basic-info">
+    <div class="card-header">
+      <span class="section-icon">📋</span>
+      <h2>基本情報</h2>
+    </div>
+    <div class="card-body">
+      <div class="field-group">
+        <label>DATE｜日付</label>
+        <input type="text" id="f-date" placeholder="yyyy/mm/dd" inputmode="numeric">
+      </div>
+      <div class="field-group">
+        <label>STAFF｜スタッフ名</label>
+        <input type="text" id="f-staff" placeholder="お名前を入力">
+      </div>
+    </div>
+  </div>
+
+  <!-- チェックリスト（JSで生成） -->
+  <div id="checklist-root"></div>
+
+  <!-- 特記事項 -->
+  <div class="card memo-card">
+    <div class="card-header">
+      <span class="section-icon">📝</span>
+      <h2>特記事項・引き継ぎ</h2>
+    </div>
+    <div class="card-body">
+      <textarea id="f-memo" placeholder="本日のお客様の様子、明日への引き継ぎ、気になることなど自由に記入してください。"></textarea>
+    </div>
+  </div>
+
+</div>
+
+<!-- 生成ボタン（固定） -->
+<div class="generate-btn-wrap">
+  <button class="generate-btn" onclick="generateLine()" type="button">
+    <span>💬</span>
+    <span>LINE用テキストを生成</span>
+  </button>
+</div>
+
+<!-- モーダル -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOnOverlay(event)">
+  <div class="modal-box" id="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h3>💬 LINE用テキスト</h3>
+      <button class="modal-close" onclick="closeModal()" type="button">✕</button>
+    </div>
+    <div class="modal-body">
+      <textarea class="modal-textarea" id="line-output" readonly></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="copy-btn" id="copy-btn" onclick="copyText()" type="button">
+        <span>📋</span>
+        <span>コピーする</span>
+      </button>
+      <button class="select-btn" onclick="selectAll()" type="button">全選択</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast">✅ コピーしました！</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   チェック項目データ定義
+   - defaultOk: true  → デフォルトが options[0]（完了・した）
+   - defaultOk: false → デフォルトが options[1]（なし など）
+   - conditional: 特定の選択肢を選んだとき追加入力欄を表示
+═══════════════════════════════════════════════════════════════ */
+const SECTIONS = [
+  {
+    icon: '📋', title: '営業・顧客対応',
+    items: [
+      {
+        id: 1, num: '①', label: 'お客様に送るLINE',
+        options: ['した', 'していない'], defaultOk: true,
+        conditional: { triggerIndex: 0, label: '何日分までLINEしたか（例：2026/07/04）', placeholder: 'yyyy/mm/dd', type: 'text' }
+      },
+      {
+        id: 2, num: '②', label: '新規の電話',
+        options: ['対応した', 'なし'], defaultOk: false,
+        conditional: { triggerIndex: 0, label: '詳細（氏名や用件）', placeholder: '例：山田 花子 様 / 次回予約のご相談', type: 'text' }
+      },
+      { id: 3, num: '③', label: '予約台帳の整理・確認（本日分）', options: ['完了', '未完了'], defaultOk: true },
+      {
+        id: 4, num: '④', label: 'カルテ準備（翌日のお客様分）',
+        options: ['完了', '未完了'], defaultOk: true,
+        conditional: { triggerIndex: 1, label: '詳細（理由）', placeholder: '例：急な対応で時間が取れなかったため', type: 'text' }
+      },
+    ]
+  },
+  {
+    icon: '💴', title: '売上・レジ管理',
+    items: [
+      { id: 5,  num: '⑤', label: 'レジ締め・現金の確認',         options: ['完了', '未完了'],    defaultOk: true },
+      { id: 6,  num: '⑥', label: '釣り銭の補充・確認',           options: ['完了', '要確認'],    defaultOk: true },
+      { id: 7,  num: '⑦', label: 'キャッシュレス決済端末の確認', options: ['問題なし', '要確認'], defaultOk: true },
+      { id: 8,  num: '⑧', label: '売上伝票・領収書の整理',       options: ['完了', '未完了'],    defaultOk: true },
+    ]
+  },
+  {
+    icon: '✨', title: '施術室・設備',
+    items: [
+      { id: 9,  num: '⑨',  label: '施術ベッド・チェアの清掃・消毒', options: ['完了', '未完了'], defaultOk: true },
+      { id: 10, num: '⑩',  label: '施術機器の電源オフ・片付け',     options: ['完了', '未完了'], defaultOk: true },
+      { id: 11, num: '⑪',  label: '使用化粧品・ケア用品の補充確認', options: ['完了', '要補充'], defaultOk: true },
+      { id: 12, num: '⑫',  label: 'タオル・リネン類の洗濯・片付け', options: ['完了', '未完了'], defaultOk: true },
+    ]
+  },
+  {
+    icon: '📦', title: '備品・在庫',
+    items: [
+      { id: 13, num: '⑬', label: '消耗品（コットン・手袋等）の在庫確認', options: ['問題なし', '要補充'], defaultOk: true },
+      { id: 14, num: '⑭', label: '販売商品の在庫・陳列確認',            options: ['問題なし', '要補充'], defaultOk: true },
+      { id: 15, num: '⑮', label: 'ドリンク・アメニティの補充',          options: ['完了', '未完了'],    defaultOk: true },
+      { id: 16, num: '⑯', label: '翌日の予約・スケジュール確認',        options: ['確認済', '未確認'],  defaultOk: true },
+    ]
+  },
+  {
+    icon: '🧹', title: '清掃・環境',
+    items: [
+      { id: 17, num: '⑰', label: '施術室・待合室の清掃',    options: ['完了', '未完了'], defaultOk: true },
+      { id: 18, num: '⑱', label: '洗面所・トイレの清掃',    options: ['完了', '未完了'], defaultOk: true },
+      { id: 19, num: '⑲', label: '玄関・外観の清掃',        options: ['完了', '未完了'], defaultOk: true },
+      { id: 20, num: '⑳', label: 'ゴミ出し・ゴミ箱の処理', options: ['完了', '未完了'], defaultOk: true },
+    ]
+  },
+  {
+    icon: '🔒', title: '閉店・セキュリティ',
+    items: [
+      { id: 21, num: '㉑', label: 'アロマ・加湿器の電源オフ・片付け', options: ['完了', '未完了'],  defaultOk: true },
+      { id: 22, num: '㉒', label: '冷暖房・換気扇の電源オフ',         options: ['完了', '未完了'],  defaultOk: true },
+      { id: 23, num: '㉓', label: '窓・ドア・施錠の最終確認',         options: ['確認済', '未確認'], defaultOk: true },
+      { id: 24, num: '㉔', label: 'SNS投稿・口コミへの返信',          options: ['完了', '未対応'],  defaultOk: true },
+    ]
+  },
+];
+
+/* ─── 状態 ─────────────────────────────────────────────────── */
+const allItems    = SECTIONS.flatMap(s => s.items);
+const selected    = {};
+const extraValues = {};
+
+allItems.forEach(item => {
+  selected[item.id]    = item.defaultOk ? 0 : 1;
+  extraValues[item.id] = '';
+});
+
+/* ─── DOM構築 ──────────────────────────────────────────────── */
+function buildChecklist() {
+  const root = document.getElementById('checklist-root');
+  root.innerHTML = '';
+
+  SECTIONS.forEach(section => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-header">
+        <span class="section-icon">${section.icon}</span>
+        <h2>${section.title}</h2>
+      </div>
+      <div class="card-body"></div>`;
+    root.appendChild(card);
+
+    const body = card.querySelector('.card-body');
+
+    section.items.forEach(item => {
+      const wrap = document.createElement('div');
+      wrap.className = 'check-item';
+      wrap.id = `item-wrap-${item.id}`;
+
+      const btns = item.options.map((opt, idx) => {
+        const isDefault = (idx === (item.defaultOk ? 0 : 1));
+        const cls = isDefault ? (idx === 0 ? 'active-ok' : 'active-ng') : '';
+        return `<button
+          class="toggle-btn ${cls}"
+          id="btn-${item.id}-${idx}"
+          onclick="selectOption(${item.id}, ${idx})"
+          type="button"
+        >${opt}</button>`;
+      }).join('');
+
+      let conditionalHtml = '';
+      if (item.conditional) {
+        const c = item.conditional;
+        const show = (selected[item.id] === c.triggerIndex);
+        conditionalHtml = `
+          <div class="conditional-input${show ? ' show' : ''}" id="cond-${item.id}">
+            <label>${c.label}</label>
+            <input type="text"
+              id="extra-${item.id}"
+              placeholder="${c.placeholder || ''}"
+              oninput="extraValues[${item.id}]=this.value">
+          </div>`;
+      }
+
+      wrap.innerHTML = `
+        <div class="item-top">
+          <span class="item-num">${item.num}</span>
+          <span class="item-label">${item.label}</span>
+        </div>
+        <div class="toggle-group">${btns}</div>
+        ${conditionalHtml}`;
+      body.appendChild(wrap);
+    });
+  });
+
+  updateProgress();
+}
+
+/* ─── 選択 ─────────────────────────────────────────────────── */
+function selectOption(itemId, optionIndex) {
+  const item = allItems.find(i => i.id === itemId);
+  selected[itemId] = optionIndex;
+
+  item.options.forEach((_, idx) => {
+    const btn = document.getElementById(`btn-${itemId}-${idx}`);
+    btn.classList.remove('active-ok', 'active-ng');
+    if (idx === optionIndex) {
+      btn.classList.add(idx === 0 ? 'active-ok' : 'active-ng');
+    }
+  });
+
+  if (item.conditional) {
+    const condEl = document.getElementById(`cond-${itemId}`);
+    if (condEl) {
+      if (optionIndex === item.conditional.triggerIndex) {
+        condEl.classList.add('show');
+        setTimeout(() => condEl.querySelector('input').focus(), 50);
+      } else {
+        condEl.classList.remove('show');
+        extraValues[itemId] = '';
+        const inp = document.getElementById(`extra-${itemId}`);
+        if (inp) inp.value = '';
+      }
+    }
+  }
+
+  updateProgress();
+}
+
+/* ─── 進捗 ─────────────────────────────────────────────────── */
+function updateProgress() {
+  const total = allItems.length;
+  const done  = allItems.filter(i => selected[i.id] === 0).length;
+  const pct   = Math.round(done / total * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-pct').textContent  = `${done} / ${total}`;
+}
+
+/* ─── 日付自動入力 ─────────────────────────────────────────── */
+function setTodayDate() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  document.getElementById('f-date').value = `${y}/${m}/${d}`;
+}
+
+/* ─── LINE テキスト生成 ────────────────────────────────────── */
+const DAYS = ['日', '月', '火', '水', '木', '金', '土'];
+
+function generateLine() {
+  const date  = document.getElementById('f-date').value.trim() || '（未入力）';
+  const staff = document.getElementById('f-staff').value.trim() || '（未入力）';
+  const memo  = document.getElementById('f-memo').value.trim();
+
+  let dateStr = date;
+  if (/^\d{4}\/\d{2}\/\d{2}$/.test(date)) {
+    const [y, m, d] = date.split('/').map(Number);
+    const dow = DAYS[new Date(y, m - 1, d).getDay()];
+    dateStr = `${date}（${dow}）`;
+  }
+
+  const div = '────────────────────';
+  const lines = [];
+
+  lines.push('🌸 退勤チェック日報 🌸');
+  lines.push(div);
+  lines.push(`📅 ${dateStr}`);
+  lines.push(`👤 スタッフ：${staff}`);
+  lines.push('');
+
+  SECTIONS.forEach(section => {
+    lines.push(`${section.icon} 【${section.title}】`);
+    section.items.forEach(item => {
+      const selIdx  = selected[item.id];
+      const optText = item.options[selIdx];
+      const mark    = selIdx === 0 ? '✅' : '⚠️';
+      let line = `${item.num} ${item.label}：${mark} ${optText}`;
+
+      if (item.conditional && selIdx === item.conditional.triggerIndex) {
+        const extra = (extraValues[item.id] || '').trim();
+        if (extra) line += `（${extra}）`;
+      }
+      lines.push(line);
+    });
+    lines.push('');
+  });
+
+  if (memo) {
+    lines.push('📝 【特記事項・引き継ぎ】');
+    lines.push(memo);
+    lines.push('');
+  }
+
+  lines.push(div);
+  lines.push('お疲れ様でした！✨');
+
+  const text = lines.join('\n');
+  document.getElementById('line-output').value = text;
+
+  openModal();
+  copyTextSilent(text);
+}
+
+/* ─── モーダル ─────────────────────────────────────────────── */
+function openModal() {
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeModalOnOverlay(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+/* スワイプダウンでモーダルを閉じる */
+(function() {
+  let startY = 0;
+  const box = document.getElementById('modal-box');
+  box.addEventListener('touchstart', e => { startY = e.touches[0].clientY; }, { passive: true });
+  box.addEventListener('touchend', e => {
+    if (e.changedTouches[0].clientY - startY > 80) closeModal();
+  }, { passive: true });
+})();
+
+/* ─── コピー ────────────────────────────────────────────────── */
+function copyText() {
+  writeClipboard(document.getElementById('line-output').value, true);
+}
+function copyTextSilent(text) {
+  writeClipboard(text, false);
+}
+function writeClipboard(text, showFeedback) {
+  const btn = document.getElementById('copy-btn');
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text)
+      .then(() => { if (showFeedback) animateCopy(btn); })
+      .catch(() => fallbackCopy(text, btn, showFeedback));
+  } else {
+    fallbackCopy(text, btn, showFeedback);
+  }
+}
+function fallbackCopy(text, btn, showFeedback) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;font-size:16px;';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try { document.execCommand('copy'); if (showFeedback) animateCopy(btn); }
+  catch (e) { console.warn('copy failed', e); }
+  document.body.removeChild(ta);
+}
+function animateCopy(btn) {
+  btn.classList.add('copied');
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<span>✅</span><span>コピーしました！</span>';
+  showToast();
+  setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = orig; }, 2500);
+}
+function showToast() {
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+function selectAll() {
+  const ta = document.getElementById('line-output');
+  ta.focus(); ta.select();
+}
+
+/* ─── キーボードショートカット（PC） ───────────────────────── */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generateLine();
+});
+
+/* ─── 初期化 ─────────────────────────────────────────────────── */
+setTodayDate();
+buildChecklist();
+</script>
+</body>
+</html>
