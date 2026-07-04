@@ -490,7 +490,7 @@ body{
       { "rules": { "reports": { ".read": true, ".write": true } } }
    ===================================================================== */
 
-const STAFF_NAMES = ['スタッフA', 'スタッフB', 'スタッフC'];
+const STAFF_NAMES = ['オーナー', 'みづき', 'みれい', 'Mゆい', 'ゆいな', 'あやか', 'Fゆい', 'このは'];
 
 const FIREBASE_CONFIG = {
   apiKey:            '',
@@ -524,7 +524,7 @@ const SECTIONS = [
         options:['した','していない'], okIdx:0,
         conditional:{ triggerIdx:0, label:'いつまでの分を送ったか', placeholder:'yyyy/mm/dd', required:true }
       },
-      { id:23, label:'3日以内に新規のお客様の来店はありましたか？',
+      { id:23, label:'直近3日以内に新規のお客様の予約はありましたか？',
         options:['はい','いいえ'], okIdx:-1,
         multiFieldConditional:{
           triggerIdx:0,
