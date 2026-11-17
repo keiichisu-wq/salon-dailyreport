@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>ARTEX脅威動向レポート</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --surface: #ffffff;
+      --text: #172033;
+      --muted: #5b6475;
+      --line: #dce2ec;
+      --brand: #1357c7;
+      --brand-soft: #eaf1ff;
+      --risk: #b42318;
+      --risk-soft: #fff0ee;
+      --warn: #8a4b08;
+      --warn-soft: #fff6e8;
+      --good: #146c43;
+      --good-soft: #eaf8f1;
+      --shadow: 0 8px 24px rgba(23, 32, 51, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+      font-size: 16px;
+      line-height: 1.72;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    main {
+      width: min(100%, 780px);
+      margin: 0 auto;
+      padding: 18px 14px 64px;
+    }
+
+    header {
+      padding: 22px 18px;
+      border-radius: 18px;
+      background: linear-gradient(145deg, #10295a, #1357c7);
+      color: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    header p { margin: 8px 0 0; color: #e7efff; }
+
+    h1, h2, h3 { line-height: 1.38; }
+    h1 { margin: 0; font-size: clamp(1.72rem, 7vw, 2.45rem); }
+    h2 { margin: 0 0 14px; font-size: 1.4rem; }
+    h3 { margin: 0 0 8px; font-size: 1.08rem; }
+    p { margin: 0 0 12px; }
+
+    .meta {
+      margin-top: 10px;
+      font-size: 0.82rem;
+      opacity: 0.88;
+    }
+
+    .lead {
+      margin: 18px 0;
+      padding: 17px 16px;
+      border-left: 5px solid var(--brand);
+      border-radius: 12px;
+      background: var(--brand-soft);
+      color: #162d56;
+      font-weight: 650;
+    }
+
+    section {
+      margin-top: 16px;
+      padding: 20px 17px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--brand);
+      font-size: 0.76rem;
+      font-weight: 750;
+      letter-spacing: 0.08em;
+    }
+
+    .summary-grid,
+    .impact-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .summary-card,
+    .impact-card {
+      padding: 14px;
+      border-radius: 12px;
+      background: #f7f9fd;
+    }
+
+    .summary-card strong {
+      display: block;
+      color: var(--brand);
+      font-size: 1.12rem;
+    }
+
+    .summary-card span,
+    .impact-card p {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .flow {
+      display: grid;
+      gap: 0;
+      margin-top: 14px;
+    }
+
+    .step {
+      position: relative;
+      margin-left: 15px;
+      padding: 0 0 22px 25px;
+      border-left: 2px solid #b9caea;
+    }
+
+    .step:last-child { padding-bottom: 0; border-left-color: transparent; }
+
+    .step::before {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: -7px;
+      width: 12px;
+      height: 12px;
+      border: 2px solid var(--surface);
+      border-radius: 50%;
+      background: var(--brand);
+      box-shadow: 0 0 0 2px var(--brand);
+    }
+
+    .step:last-child::before { background: var(--risk); box-shadow: 0 0 0 2px var(--risk); }
+    .step p { color: var(--muted); font-size: 0.91rem; }
+
+    .speed {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .metric {
+      padding: 13px 9px;
+      border-radius: 12px;
+      background: var(--risk-soft);
+      text-align: center;
+    }
+
+    .metric strong {
+      display: block;
+      color: var(--risk);
+      font-size: clamp(1.05rem, 4.5vw, 1.4rem);
+      line-height: 1.3;
+    }
+
+    .metric span { color: #6f3a35; font-size: 0.75rem; }
+
+    ul { margin: 8px 0 0; padding-left: 1.25em; }
+    li + li { margin-top: 8px; }
+
+    .callout {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 12px;
+      background: var(--warn-soft);
+      color: #613509;
+    }
+
+    .callout.good { background: var(--good-soft); color: #104f34; }
+    .callout.risk { background: var(--risk-soft); color: #76251e; }
+
+    .assessment {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .assessment-item {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+
+    .assessment-item .verdict {
+      display: inline-block;
+      margin-bottom: 7px;
+      padding: 2px 9px;
+      border-radius: 999px;
+      background: var(--good-soft);
+      color: var(--good);
+      font-size: 0.76rem;
+      font-weight: 750;
+    }
+
+    .assessment-item .verdict.note { background: var(--warn-soft); color: var(--warn); }
+
+    .priority {
+      counter-reset: priority;
+      display: grid;
+      gap: 11px;
+      margin-top: 12px;
+    }
+
+    .priority-item {
+      counter-increment: priority;
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .priority-item::before {
+      content: counter(priority);
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--brand);
+      color: #fff;
+      font-weight: 750;
+    }
+
+    .priority-item p { color: var(--muted); font-size: 0.91rem; }
+
+    .quote {
+      margin: 12px 0 0;
+      padding: 16px;
+      border-radius: 12px;
+      background: #162d56;
+      color: #fff;
+      font-weight: 650;
+    }
+
+    .sources a {
+      color: var(--brand);
+      overflow-wrap: anywhere;
+    }
+
+    .sources li { font-size: 0.9rem; }
+    .note { color: var(--muted); font-size: 0.78rem; }
+
+    @media (min-width: 620px) {
+      main { padding: 28px 20px 80px; }
+      header { padding: 30px 28px; }
+      section { padding: 25px 24px; }
+      .summary-grid { grid-template-columns: repeat(3, 1fr); }
+      .impact-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 420px) {
+      .speed { grid-template-columns: 1fr; }
+      .metric { text-align: left; padding-inline: 14px; }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d1421;
+        --surface: #151e2d;
+        --text: #eef3ff;
+        --muted: #b4bfd1;
+        --line: #2c3950;
+        --brand: #8cb6ff;
+        --brand-soft: #192b48;
+        --risk: #ff9d92;
+        --risk-soft: #3a2225;
+        --warn: #f5bc72;
+        --warn-soft: #342719;
+        --good: #81dbad;
+        --good-soft: #173429;
+        --shadow: none;
+      }
+
+      .lead { color: #deebff; }
+      .summary-card, .impact-card { background: #1a2536; }
+      .metric span { color: #e4b4af; }
+      .callout { color: #f7d5a3; }
+      .callout.good { color: #b7edcf; }
+      .callout.risk { color: #ffc0b8; }
+      .quote { background: #243b63; }
+    }
+
+    @media print {
+      body { background: #fff; }
+      main { width: 100%; padding: 0; }
+      section, header { box-shadow: none; break-inside: avoid; }
+      a { color: inherit; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>ARTEX脅威動向レポート</h1>
+      <p>AIエージェントによって、サイバー攻撃の速度・規模・継続性がどう変わるか</p>
+      <div class="meta">2026年11月15日版｜経営層・事業責任者向け</div>
+    </header>
+
+    <div class="lead">
+      ARTEXの本質は「新しい攻撃手法」ではなく、既存の攻撃を自動で探し、組み合わせ、失敗しても再試行する攻撃オーケストレーターである。
+    </div>
+
+    <section id="about">
+      <span class="eyebrow">01 / OVERVIEW</span>
+      <h2>ARTEXとは</h2>
+      <p>ARTEXは、LLMと複数のAIエージェントを使って、侵入テストの工程を自動化するオープンソースのフレームワークです。本来は正規のセキュリティ検証を目的としていましたが、犯罪者や国家系と評価される攻撃者による悪用が確認されています。</p>
+      <p>攻撃者が「この企業の機密情報を探す」「管理者権限を取得する」といった目標を与えると、ARTEXは計画を作り、既存の攻撃ツールやクラウドAPIを呼び出し、結果を共有しながら次の行動を選びます。</p>
+
+      <div class="summary-grid">
+        <div class="summary-card">
+          <strong>AIモデルではない</strong>
+          <span>複数の商用・オープンソースモデルを切り替えて利用できる基盤</span>
+        </div>
+        <div class="summary-card">
+          <strong>単体マルウェアではない</strong>
+          <span>既存ツール、API、外部サービスを連携させる指揮・自動化レイヤー</span>
+        </div>
+        <div class="summary-card">
+          <strong>攻撃者専用ではない</strong>
+          <span>正規のペンテストにも使えるが、同じ能力が実攻撃に転用されている</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="movement">
+      <span class="eyebrow">02 / ATTACK FLOW</span>
+      <h2>ARTEXはどう動くか</h2>
+
+      <div class="flow">
+        <div class="step">
+          <h3>1. 攻撃者が目標を指定</h3>
+          <p>標的、目的、窃取済み認証情報などを与える。</p>
+        </div>
+        <div class="step">
+          <h3>2. 自動偵察</h3>
+          <p>公開アプリ、API、GitHub、クラウド、AD、認証画面を探索する。</p>
+        </div>
+        <div class="step">
+          <h3>3. 複数経路を並列実行</h3>
+          <p>パスワードスプレー、認証・認可不備、漏えい鍵、公開管理APIなどを試す。</p>
+        </div>
+        <div class="step">
+          <h3>4. 結果を評価して再試行</h3>
+          <p>失敗理由を分析し、パラメータ、ツール、侵入経路を変更する。</p>
+        </div>
+        <div class="step">
+          <h3>5. 権限昇格・横展開・永続化</h3>
+          <p>OAuth資格情報、管理者アカウント、Webシェル、RATなどを利用する。</p>
+        </div>
+        <div class="step">
+          <h3>6. データへ到達</h3>
+          <p>メール、DB、Key Vault、クラウドストレージなどを収集・持ち出す。</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="speed">
+      <span class="eyebrow">03 / MACHINE SPEED</span>
+      <h2>最大の変化は「時間」</h2>
+      <p>攻撃者が手作業で行っていた調査、判断、修正が自動化され、防御側が対応を判断している間に次の工程へ進みます。</p>
+
+      <div class="speed">
+        <div class="metric">
+          <strong>2〜25秒</strong>
+          <span>観測された実行バースト</span>
+        </div>
+        <div class="metric">
+          <strong>5分以内</strong>
+          <span>公開鍵の発見からKey Vault取得</span>
+        </div>
+        <div class="metric">
+          <strong>8万件／90分</strong>
+          <span>関連事例のリクエスト量</span>
+        </div>
+      </div>
+
+      <div class="callout risk"><strong>経営上の問題：</strong>「検知できるか」だけでなく、検知後に何分で認証情報を失効し、アプリを止め、システムを隔離できるかが問われる。</div>
+    </section>
+
+    <section id="impact">
+      <span class="eyebrow">04 / BUSINESS IMPACT</span>
+      <h2>企業に与える5つの影響</h2>
+
+      <div class="impact-grid">
+        <div class="impact-card">
+          <h3>対応時間の消失</h3>
+          <p>検知から会議、承認、封じ込めという人間中心の手順では間に合わない可能性がある。</p>
+        </div>
+        <div class="impact-card">
+          <h3>攻撃対象の拡大</h3>
+          <p>一組織あたりの攻撃コストが下がり、知名度に関係なく弱点のある企業が狙われる。</p>
+        </div>
+        <div class="impact-card">
+          <h3>周辺システムの入口化</h3>
+          <p>取引先ポータル、モバイルAPI、古い業務システム、事業部独自アプリが攻撃経路になる。</p>
+        </div>
+        <div class="impact-card">
+          <h3>サプライチェーン波及</h3>
+          <p>一つの委託先や連携アプリの侵害が、多数の顧客テナントへの攻撃機会に変わる。</p>
+        </div>
+        <div class="impact-card">
+          <h3>正規操作への偽装</h3>
+          <p>正しい認証情報や管理APIを使うため、IPやマルウェアだけの監視では見つけにくい。</p>
+        </div>
+        <div class="impact-card">
+          <h3>攻撃スキルの平準化</h3>
+          <p>計画、ツール選択、エラー修正をAIが補助し、少人数でも複雑な攻撃を実行できる。</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="cases">
+      <span class="eyebrow">05 / OBSERVED CASES</span>
+      <h2>確認されている活動</h2>
+      <ul>
+        <li><strong>VAPOR PANDA：</strong>14か国以上、200組織以上を対象とし、9組織で侵入後の活動が報告された。</li>
+        <li><strong>STORM-0940：</strong>侵害された第三者アプリの認証情報を利用し、2,250以上のMicrosoft 365下流テナントへのサインインを試行した。</li>
+        <li><strong>STORM-3358：</strong>東南アジアの金融分野などを対象に、公開システムを侵害してRATやC2ツールを展開した。</li>
+        <li><strong>韓国金融機関：</strong>ARTEX関連の攻撃で、約6万7,000人分の個人情報流出が報告された。</li>
+        <li><strong>クラウド秘密情報：</strong>公開GitHubから認証情報を発見し、5分以内にAzure Key Vaultからデータを取得した事例が報告された。</li>
+      </ul>
+      <p class="note">数字は異なる調査・キャンペーンの集約であり、一つの攻撃ですべてが発生したものではない。2,250テナントすべての侵害が確認されたわけでもない。</p>
+    </section>
+
+    <section id="evaluation">
+      <span class="eyebrow">06 / EXPERT ASSESSMENT</span>
+      <h2>大元氏の評価をどう反映するか</h2>
+      <p>確認できた関連公開投稿では、「高度な認証だけでは十分でない」「従来型の脆弱性診断だけでは、設定・管理・信頼関係の弱点を捉えきれない」「脅威モデリングが重要」という問題提起が示されています。</p>
+
+      <div class="assessment">
+        <div class="assessment-item">
+          <span class="verdict">妥当</span>
+          <h3>ARTEXは強固な正面を避け、弱い経路を探す</h3>
+          <p>FBI、Google/Mandiant、Talosも、周辺アプリ、公開API、漏えい鍵、取引先との信頼関係が悪用される点を報告しており、この評価と整合します。</p>
+        </div>
+
+        <div class="assessment-item">
+          <span class="verdict note">表現に補足が必要</span>
+          <h3>「MFAは効かない」ではなく「MFAだけでは足りない」</h3>
+          <p>MFAはパスワードスプレーや盗難パスワードの悪用に有効です。一方、アプリ資格情報、API認可不備、既存セッション、信頼済み第三者アプリなど、MFAを通らない経路は防げません。</p>
+        </div>
+
+        <div class="assessment-item">
+          <span class="verdict note">表現に補足が必要</span>
+          <h3>「脆弱性診断が無効」ではなく「従来型診断だけでは不十分」</h3>
+          <p>既知脆弱性の診断は引き続き必要です。ただし、認証・認可、設定、クラウドIAM、業務API、組織間の信頼経路まで含めた脅威モデリングと侵入シナリオ検証が必要です。</p>
+        </div>
+      </div>
+
+      <div class="callout good"><strong>レポートへの反映方針：</strong>個別製品を否定するのではなく、「単一対策では止められず、攻撃面全体と侵入後の影響を管理する必要がある」と表現する。</div>
+    </section>
+
+    <section id="actions">
+      <span class="eyebrow">07 / PRIORITIES</span>
+      <h2>優先して実施すべき対策</h2>
+
+      <div class="priority">
+        <div class="priority-item">
+          <div><h3>公開資産と周辺システムを把握する</h3><p>取引先ポータル、古いAPI、管理画面、モバイルバックエンドを含めて棚卸しする。</p></div>
+        </div>
+        <div class="priority-item">
+          <div><h3>秘密情報とサービスIDを管理する</h3><p>公開コード、CI/CD、設定ファイルをスキャンし、長期鍵を短期・用途限定の認証へ移行する。</p></div>
+        </div>
+        <div class="priority-item">
+          <div><h3>信頼関係と権限を最小化する</h3><p>OAuthアプリ、サービスプリンシパル、委託先アクセス、クラウドロールを定期的に見直す。</p></div>
+        </div>
+        <div class="priority-item">
+          <div><h3>速度と量を検知する</h3><p>短時間の大量API、連続する権限エラー、通常と異なるアクセス元を横断的に相関分析する。</p></div>
+        </div>
+        <div class="priority-item">
+          <div><h3>封じ込めを機械速度に近づける</h3><p>トークン失効、アプリ無効化、システム隔離を事前承認し、演習で実行時間を測定する。</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="conclusion">
+      <span class="eyebrow">08 / CONCLUSION</span>
+      <h2>経営層への結論</h2>
+      <div class="quote">ARTEXの脅威は、AIが未知の攻撃を発明することではない。既存の弱点を機械速度で発見し、複数経路を試し、最も弱い場所から侵入して被害を連鎖させることである。</div>
+      <p style="margin-top: 14px;">したがって対策の中心は、「ARTEXというツールを検知すること」ではありません。認証情報が一つ漏れても被害が広がらない設計と、異常を検知した瞬間に認証・アプリ・システムを止められる体制です。</p>
+    </section>
+
+    <section class="sources" id="sources">
+      <span class="eyebrow">SOURCES</span>
+      <h2>参照情報</h2>
+      <ul>
+        <li><a href="https://blog.talosintelligence.com/artex-and-beyond/">Cisco Talos — ARTEX and beyond</a></li>
+        <li><a href="https://cloud.google.com/blog/topics/threat-intelligence/artex-and-friends-enter-agentic-offensive-frameworks">Google Threat Intelligence Group / Mandiant</a></li>
+        <li><a href="https://www.microsoft.com/en-us/security/blog/2026/10/21/storm-0940-uses-artex-agentic-ai-connectwise-supply-chain-compromise/">Microsoft Security — STORM-0940</a></li>
+        <li>FBI FLASH-20261113-001 — Threat Overview of ARTEX Autonomous Penetration Testing Framework</li>
+        <li><a href="https://x.com/takashi_ohmoto/status/2121767614137749880">大元隆志氏の指定投稿</a>および検索で確認できた関連公開投稿</li>
+      </ul>
+      <p class="note">指定されたX投稿はX側の閲覧制限により本文を直接取得できなかったため、同氏の検索可能な関連公開投稿に共通する論点を反映した。一次情報と一致する部分、補足が必要な表現を分けて評価している。</p>
+    </section>
+  </main>
+</body>
+</html>
